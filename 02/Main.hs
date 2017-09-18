@@ -2,17 +2,31 @@ module Main where
 
 import System.Environment (getArgs)
 
-keypad :: [[Int]]
-keypad = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+diamondKeypad :: [[Char]]
+diamondKeypad =
+  [ ['-', '-', '1', '-', '-']
+  , ['-', '2', '3', '4', '-']
+  , ['5', '6', '7', '8', '9']
+  , ['-', 'A', 'B', 'C', '-']
+  , ['-', '-', 'D', '-', '-']
+  ]
 
 startingPosition :: (Int, Int)
-startingPosition = (1, 1)
+startingPosition = (0, 2)
 
--- instructions :: [String]
--- instructions = ["ULL", "RRDDD", "LURDL", "UUUUD"]
+instructions :: [String]
+instructions = ["RL", "RRDDD", "URRL", "LURRUL"]
 
-data Direction = U | D | L | R deriving Show
+data Direction
+  = U
+  | D
+  | L
+  | R
+  deriving (Show)
+
 type Moves = [(Int, Int)]
+
+type Keypad = [[Char]]
 
 getDirection :: Char -> Direction
 getDirection 'U' = U
@@ -21,15 +35,16 @@ getDirection 'L' = L
 getDirection 'R' = R
 getDirection _ = error "Bad direction"
 
-invalidPosition :: (Int, Int) -> Bool
-invalidPosition (x, y)
-  | x < 0 || x > 2 = True
-  | y < 0 || y > 2 = True
-  | otherwise = False
+invalidPosition :: Keypad -> (Int, Int) -> Bool
+invalidPosition keypad (x, y)
+  | x < 0 || x >= keypadWidth = True
+  | y < 0 || y >= keypadWidth = True
+  | otherwise = positionToChar keypad (x, y) == '-'
+  where keypadWidth = length (head keypad)
 
-newPosition :: (Int, Int) -> Direction -> (Int, Int)
-newPosition currentPosition direction =
-  if invalidPosition newPosition
+newPosition :: Keypad -> (Int, Int) -> Direction -> (Int, Int)
+newPosition keypad currentPosition direction =
+  if invalidPosition keypad newPosition
     then currentPosition
     else newPosition
   where
@@ -47,14 +62,15 @@ instructionsToDirections sequences = map charsToMoves sequences
 charsToMoves :: String -> [Direction]
 charsToMoves chars = map getDirection chars
 
-endPositions :: (Int, Int) -> [[Direction]] -> [(Int, Int)]
-endPositions startPosition sequences = tail (scanl applyMoves startPosition sequences)
+endPositions :: Keypad -> (Int, Int) -> [[Direction]] -> [(Int, Int)]
+endPositions keypad startPosition sequences =
+  tail (scanl (applyMoves keypad) startPosition sequences)
 
-applyMoves :: (Int, Int) -> [Direction] -> (Int, Int)
-applyMoves position directions = foldl newPosition position directions
+applyMoves :: Keypad -> (Int, Int) -> [Direction] -> (Int, Int)
+applyMoves keypad position directions = foldl (newPosition keypad) position directions
 
-positionToNumber :: (Int, Int) -> Int
-positionToNumber (x, y) = keypad !! y !! x
+positionToChar :: Keypad -> (Int, Int) -> Char
+positionToChar keypad (x, y) = keypad !! y !! x
 
 main :: IO ()
 main = do
@@ -64,8 +80,8 @@ main = do
   let answer = solveProblem moves
   print answer
 
-solveProblem :: [String] -> [Int]
+solveProblem :: [String] -> [Char]
 solveProblem instructions = do
   let directions = instructionsToDirections instructions
-  let endLocations = endPositions startingPosition directions
-  map positionToNumber endLocations
+  let endLocations = endPositions diamondKeypad startingPosition directions
+  map (positionToChar diamondKeypad) endLocations
