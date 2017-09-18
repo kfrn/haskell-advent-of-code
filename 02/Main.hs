@@ -1,6 +1,9 @@
 module Main where
 
 import System.Environment (getArgs)
+import Text.Parsec
+import Text.Parsec.Char
+import Text.Parsec.String (Parser, parseFromFile)
 
 diamondKeypad :: [[Char]]
 diamondKeypad =
@@ -40,7 +43,8 @@ invalidPosition keypad (x, y)
   | x < 0 || x >= keypadWidth = True
   | y < 0 || y >= keypadWidth = True
   | otherwise = positionToChar keypad (x, y) == '-'
-  where keypadWidth = length (head keypad)
+  where
+    keypadWidth = length (head keypad)
 
 newPosition :: Keypad -> (Int, Int) -> Direction -> (Int, Int)
 newPosition keypad currentPosition direction =
@@ -67,21 +71,45 @@ endPositions keypad startPosition sequences =
   tail (scanl (applyMoves keypad) startPosition sequences)
 
 applyMoves :: Keypad -> (Int, Int) -> [Direction] -> (Int, Int)
-applyMoves keypad position directions = foldl (newPosition keypad) position directions
+applyMoves keypad position directions =
+  foldl (newPosition keypad) position directions
 
 positionToChar :: Keypad -> (Int, Int) -> Char
 positionToChar keypad (x, y) = keypad !! y !! x
 
+parseDirection :: Parser Direction
+parseDirection = do
+  char <- oneOf "ULDR"
+  case char of
+    'U' -> return U
+    'D' -> return D
+    'L' -> return L
+    'R' -> return R
+    _ -> fail "not a direction"
+    -----------------------------
+    -- Below = applicative syntax
+    -----------------------------
+    -- try ((char 'U' *> return U) <|>
+    --      (char 'D' *> return D) <|>
+    --      (char 'L' *> return L) <|>
+    --      (char 'R' *> return R))
+    --     <?> "direction"
+
+ourParser :: Parser [[Direction]]
+ourParser = many1 (many1 parseDirection <* newline)
+
+parseDirections :: FilePath -> IO (Either ParseError [[Direction]])
+parseDirections file = parseFromFile (ourParser <* eof) file
+
+solveProblem :: [[Direction]] -> [Char]
+solveProblem directions = do
+  let endLocations = endPositions diamondKeypad startingPosition directions
+  map (positionToChar diamondKeypad) endLocations
+
 main :: IO ()
 main = do
   [filename] <- getArgs
-  contents <- readFile filename
-  let moves = lines contents
-  let answer = solveProblem moves
-  print answer
-
-solveProblem :: [String] -> [Char]
-solveProblem instructions = do
-  let directions = instructionsToDirections instructions
-  let endLocations = endPositions diamondKeypad startingPosition directions
-  map (positionToChar diamondKeypad) endLocations
+  parseResult <- parseDirections filename
+  case parseResult of
+    Left err -> print err
+    Right moves -> print (solveProblem moves)
