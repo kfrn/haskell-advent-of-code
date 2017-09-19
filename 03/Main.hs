@@ -6,51 +6,42 @@ import Data.List.Split (splitOn)
 import System.Environment (getArgs)
 import Text.Read (readMaybe)
 
-arrayToTriple :: [a] -> (a, a, a)
-arrayToTriple [b, c, d] = (b, c, d)
+data Triangle = Triangle
+  { shortestSide :: Int
+  , middleSide :: Int
+  , longestSide :: Int
+  }
 
-cleanTextTriple :: String -> [String]
-cleanTextTriple inputString = map trim splitString
+makeTriangle :: [Int] -> Triangle
+makeTriangle [a, b, c] = Triangle a' b' c'
   where
-    splitString = filter (\elem -> length elem > 0) $ splitOn " " inputString
+    [a', b', c'] = sort [a, b, c]
 
-triplesFromString :: String -> (Int, Int, Int)
-triplesFromString inputString =
-  arrayToTriple (map (\elem -> read elem :: Int) cleanTuple) -- NOTE: does not handle invalid cases
+triangleFromString :: String -> Triangle
+triangleFromString inputString = makeTriangle (map read splitString)
   where
-    cleanTuple = cleanTextTriple inputString
+    splitString = map trim (filter (not . null) $ splitOn " " inputString)
 
-validTriangle :: (Int, Int, Int) -> Bool
-validTriangle (a, b, c) =
-  if allSidesSameLength (a, b, c)
-    then True
-    else if sumShorterSides (a, b, c) > longestSide (a, b, c)
-           then True
-           else False
+-- Steve's syntax:
+-- triangleFromString inputString = makeTriangle $ (read . trim) <$> splitString
+--   where
+--     splitString = filter (not . null) $ splitOn " " inputString
 
-allSidesSameLength :: (Int, Int, Int) -> Bool
-allSidesSameLength (a, b, c) = a == b && b == c
+validTriangle :: Triangle -> Bool
+validTriangle triangle =
+  allSidesSameLength triangle || sumShorterSides triangle > longestSide triangle
 
-longestSide :: (Int, Int, Int) -> Int
-longestSide (a, b, c) = max a (max b c)
+allSidesSameLength :: Triangle -> Bool
+allSidesSameLength (Triangle a b c) = a == b && b == c
 
-sumShorterSides :: (Int, Int, Int) -> Int
-sumShorterSides (a, b, c) = shortestSide (a, b, c) + middleSide (a, b, c)
-
-shortestSide :: (Int, Int, Int) -> Int
-shortestSide (a, b, c) = min a (min b c)
-
-middleSide :: (Int, Int, Int) -> Int
-middleSide (a, b, c) = sort [a, b, c] !! 1
-
-twoSidesTheSameLength :: (Int, Int, Int) -> Bool
-twoSidesTheSameLength (a, b, c) = a == b || b == c || a == c
+sumShorterSides :: Triangle -> Int
+sumShorterSides triangle = shortestSide triangle + middleSide triangle
 
 main :: IO ()
 main = do
   [filename] <- getArgs
   contents <- readFile filename
-  let triples = map triplesFromString (lines contents)
+  let triangles = map triangleFromString (lines contents)
   -- print triples
-  let validTriangles = filter validTriangle triples
+  let validTriangles = filter validTriangle triangles
   print (length validTriangles)
