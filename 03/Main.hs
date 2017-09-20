@@ -1,6 +1,6 @@
 module Main where
 
-import Data.List (sort)
+import Data.List (sort, transpose)
 import Data.List.Split (divvy, splitOn)
 import System.Environment (getArgs)
 
@@ -21,17 +21,11 @@ makeTriangle [a, b, c] = Triangle a' b' c'
 splitString :: String -> [String]
 splitString inputString = filter (not . null) $ splitOn " " inputString
 
-convertStringToInt :: String -> Int -- NOTE: forces conversion to int
-convertStringToInt stringInt = read stringInt
+convertStringToInts :: [String] -> [Int]
+convertStringToInts stringInt = map read stringInt
 
-reorderColumnwise :: [Int] -> [Int]
-reorderColumnwise inputList = do
-  let subListLength = length inputList `div` numberOfColumns
-  let columnOrderIndexes =
-        concatMap
-             (\startingIdx -> createSublist startingIdx subListLength)
-             [0 .. (numberOfColumns - 1)]
-  map (\elem -> inputList !! elem) columnOrderIndexes
+reorderColumnwise :: [[Int]] -> [Int]
+reorderColumnwise inputList = concat (transpose inputList)
 
 createSublist :: Int -> Int -> [Int]
 createSublist initialIndex subListLength =
@@ -57,10 +51,10 @@ main :: IO ()
 main = do
   [filename] <- getArgs
   contents <- readFile filename
-  let stringInts = concatMap splitString (lines contents)
-  if length stringInts `mod` numberOfColumns /= 0
+  let stringInts = map splitString (lines contents)
+  let ints = map convertStringToInts stringInts
+  if length (concat stringInts) `mod` numberOfColumns /= 0
     then putStrLn "The input isn't divisible by three, sorry - no can do!"
     else do
-      let reorderedValues =
-            reorderColumnwise (map convertStringToInt stringInts)
+      let reorderedValues = reorderColumnwise ints
       print (length $ findValidTriangles reorderedValues)

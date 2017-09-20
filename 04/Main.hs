@@ -4,6 +4,7 @@ import Data.Char (isLetter)
 import Data.List (nub, sort, sortBy)
 import System.Environment (getArgs)
 import Text.Regex.PCRE
+import Data.Ord (comparing)
 
 data Room = Room
   { encryptedName :: String
@@ -34,9 +35,7 @@ groupLetters encryptedName = do
   map (\targetLetter -> filter (== targetLetter) encryptedName) uniques
 
 orderByFrequency :: [[Char]] -> [[Char]]
-orderByFrequency listOfGroupedLetters = sortBy commonToRare listOfGroupedLetters
-  where
-    commonToRare a b = length b `compare` length a
+orderByFrequency listOfGroupedLetters = sortBy (flip $ comparing length) listOfGroupedLetters
 
 mostToLeastFrequentLetters :: String -> [[Char]]
 mostToLeastFrequentLetters encryptedName = orderByFrequency groupedLetters
@@ -59,6 +58,6 @@ main = do
   contents <- readFile filename
   let rooms = map makeRoom (lines contents)
   let realRooms = filter realRoom rooms
-  let realRoomSectorIDs = map (\room -> (sectorID room)) realRooms
+  let realRoomSectorIDs = map sectorID realRooms
   let sumSectorIDs = sum realRoomSectorIDs
   print sumSectorIDs
