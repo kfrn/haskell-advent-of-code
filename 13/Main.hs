@@ -9,23 +9,20 @@ import Numeric (showIntAtBase)
 puzzleInput :: Int
 puzzleInput = 10 -- 1352
 
-gridSize :: (Int, Int)
-gridSize = (9, 7) -- (33, 42)
+gridWidth :: Int
+gridWidth = 9 -- 42
+
+gridHeight :: Int
+gridHeight = 6 -- 42
 
 startPosition :: (Int, Int)
 startPosition = (1, 1)
 
-startPosMarker :: Char
-startPosMarker = 'S'
-
 endPosition :: (Int, Int)
 endPosition = (7, 4) -- (31, 39)
 
-endPosMarker :: Char
-endPosMarker = 'E'
-
 baseCalculation :: (Int, Int) -> Int
-baseCalculation (x, y) =
+baseCalculation (y, x) =
   (x * x) + (3 * x) + (2 * x * y) + y + (y * y) + puzzleInput
 
 intToBinary :: Int -> String
@@ -63,22 +60,22 @@ replaceStringInList inputStringList (x, y) replacement =
       [replaceCharacterInString (inputStringList !! y) x replacement]
     lastStrings = drop (y + 1) inputStringList
 
-xyGridOrder :: [(Int, Int)] -> [[(Int, Int)]]
-xyGridOrder cellValues =
-  transpose (divvy (fst gridSize - 1) (fst gridSize - 1) cellValues)
+chopUpList :: [(Int, Int)] -> [[(Int, Int)]]
+chopUpList cellValues = divvy (gridWidth + 1) (gridWidth + 1) cellValues
 
 gridWithPositions :: [String] -> [String]
 gridWithPositions cellValues =
-  replaceStringInList gridWithStart endPosition endPosMarker
+  replaceStringInList gridWithStart endPosition 'E' -- end marker
   where
-    gridWithStart = replaceStringInList cellValues startPosition startPosMarker
+    gridWithStart = replaceStringInList cellValues startPosition 'S' -- start marker
 
 main :: IO ()
 main = do
-  let baseGrid = xyGridOrder (range ((0, 0), gridSize))
+  let baseGrid = chopUpList (range ((0, 0), (gridHeight, gridWidth)))
   let cellValues = map (map cellValue) baseGrid
-  let viewingGrid = map (\sublist -> intersperse ' ' sublist) (gridWithPositions cellValues)
-  let dividingLine = replicate ((fst gridSize * 2) + 1) '_'
+  let viewingGrid =
+        map (\sublist -> intersperse ' ' sublist) (gridWithPositions cellValues)
+  let dividingLine = replicate ((gridWidth * 2) + 1) '_'
   putStrLn dividingLine
   mapM_ putStrLn viewingGrid
   putStrLn dividingLine
