@@ -6,13 +6,15 @@ import Data.List.Split (divvy)
 import System.Environment (getArgs)
 import Text.Regex.PCRE
 
-extractHypernetSequences :: String -> [String]
-extractHypernetSequences ipString =
-  map (filter isLetter) (getAllTextMatches $ ipString =~ "\\[[a-z]+\\]")
+hypernetRegex :: String
+hypernetRegex = "\\[[a-z]+\\]"
 
-extractTextSequences :: String -> [String]
-extractTextSequences ipString =
-  map (filter isLetter) (getAllTextMatches $ ipString =~ "(^|\\])[a-z]+($|\\[)")
+textRegex :: String
+textRegex = "(^|\\])[a-z]+($|\\[)"
+
+extractSequences :: String -> String -> [String]
+extractSequences ipString regex =
+  map (filter isLetter) (getAllTextMatches $ ipString =~ regex)
 
 reversiblePairInAnySequence :: [String] -> Bool
 reversiblePairInAnySequence allSequences = True `elem` sequenceResults
@@ -20,22 +22,20 @@ reversiblePairInAnySequence allSequences = True `elem` sequenceResults
     sequenceResults = map reversePairInSingleSequence allSequences
 
 reversePairInSingleSequence :: String -> Bool
-reversePairInSingleSequence singleSequence =
-  True `elem` map isReversiblePair sequenceSubStrings
+reversePairInSingleSequence singleSequence = any isABBA sequenceSubStrings
   where
     sequenceSubStrings = divvy 4 1 singleSequence
 
-isReversiblePair :: String -> Bool
-isReversiblePair ipString =
-  ipString == reverse ipString && ipString !! 0 /= ipString !! 1
+isABBA :: String -> Bool
+isABBA ipString = ipString == reverse ipString && ipString !! 0 /= ipString !! 1
 
 supportsTLS :: String -> Bool
 supportsTLS ipString =
   reversiblePairInAnySequence textSequences &&
-  not reversiblePairInAnySequence hypernetSequences
+  not (reversiblePairInAnySequence hypernetSequences)
   where
-    hypernetSequences = extractHypernetSequences ipString
-    textSequences = extractTextSequences ipString
+    hypernetSequences = extractSequences ipString hypernetRegex
+    textSequences = extractSequences ipString textRegex
 
 main :: IO ()
 main = do
