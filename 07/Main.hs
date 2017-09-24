@@ -16,23 +16,25 @@ extractSequences :: String -> String -> [String]
 extractSequences ipString regex =
   map (filter isLetter) (getAllTextMatches $ ipString =~ regex)
 
-reversiblePairInAnySequence :: [String] -> Bool
-reversiblePairInAnySequence allSequences = True `elem` sequenceResults
+isABA :: String -> Bool
+isABA ipString = reversible && differentChars
   where
-    sequenceResults = map reversePairInSingleSequence allSequences
+    reversible = ipString == reverse ipString
+    differentChars = ipString !! 0 /= ipString !! 1
 
-reversePairInSingleSequence :: String -> Bool
-reversePairInSingleSequence singleSequence = any isABBA sequenceSubStrings
+extractABAs :: String -> [String]
+extractABAs singleSequence = filter isABA substrings
   where
-    sequenceSubStrings = divvy 4 1 singleSequence
+    substrings = divvy 3 1 singleSequence
 
-isABBA :: String -> Bool
-isABBA ipString = ipString == reverse ipString && ipString !! 0 /= ipString !! 1
+reverseABA :: String -> String
+reverseABA aba = drop 1 aba ++ [aba !! 1]
 
-supportsTLS :: String -> Bool
-supportsTLS ipString =
-  reversiblePairInAnySequence textSequences &&
-  not (reversiblePairInAnySequence hypernetSequences)
+supportsSSL :: String -> Bool
+supportsSSL ipString = do
+  let reverseABAs = map reverseABA (concatMap extractABAs hypernetSequences)
+  let textSequenceBABs = concatMap extractABAs textSequences
+  any (`elem` reverseABAs) textSequenceBABs
   where
     hypernetSequences = extractSequences ipString hypernetRegex
     textSequences = extractSequences ipString textRegex
@@ -41,5 +43,5 @@ main :: IO ()
 main = do
   [filename] <- getArgs
   contents <- readFile filename
-  let ipsWithTLS = filter supportsTLS (lines contents)
-  print (length ipsWithTLS)
+  let ipsWithSSL = filter supportsSSL (lines contents)
+  print (length ipsWithSSL)
