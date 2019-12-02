@@ -5,6 +5,7 @@
 > Collect stars by solving puzzles. Two puzzles will be made available on each day in the Advent calendar; the second puzzle is unlocked when you complete the first. Each puzzle grants **one star**. Good luck!
 
 * [Day 01: The Tyranny of the Rocket Equation](#day-01-the-tyranny-of-the-rocket-equation)
+* [Day 02: 1202 Program Alarm](#day-02-1202-program-alarm)
 
 To run:
 ```bash
@@ -45,3 +46,5 @@ python3 01a.py # etc
 > - The fuel required by a module of mass `100756` and its fuel is: `33583 + 11192 + 3728 + 1240 + 411 + 135 + 43 + 12 + 2 = 50346`.
 >
 > **What is the sum of the fuel requirements** for all of the modules on your spacecraft when also taking into account the mass of the added fuel? (Calculate the fuel requirements for each module separately, then add them all up at the end.)
+
+## Day 02: [1202 Program Alarm](https://adventofcode.com/2019/day/2)
