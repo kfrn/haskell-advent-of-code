@@ -4,3 +4,5 @@
 
 * [2017](./2017)
   - I did a handful of exercises in Haskell
+* [2019](./2019)
+  - Let's see how this goes ...
